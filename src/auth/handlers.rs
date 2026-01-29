@@ -175,12 +175,12 @@ pub async fn update_user(
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
-    if let Some(data) = payload.roles.clone() {
-        if data == "root" {
-            return Err(ApiErrors::BadRequest(
-                "This Admin level cans't be create".to_string(),
-            ));
-        }
+    if let Some(data) = payload.roles.clone()
+        && data == "root"
+    {
+        return Err(ApiErrors::BadRequest(
+            "This Admin level cans't be create".to_string(),
+        ));
     }
 
     if roles.as_str() == "normal" {
