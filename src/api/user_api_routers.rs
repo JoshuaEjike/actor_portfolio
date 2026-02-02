@@ -1,6 +1,6 @@
 use axum::{
     Router,
-    routing::{delete, get, patch, post},
+    routing::{get, post},
 };
 
 use crate::{
@@ -13,8 +13,9 @@ pub fn user_api_router(state: AppState) -> Router {
         .route("/register", post(register))
         .route("/login", post(login))
         .route("/users", get(get_all_users))
-        .route("/users/{id}", get(get_user))
-        .route("/users/{id}", patch(update_user))
-        .route("/users/{id}", delete(delete_user))
+        .route(
+            "/users/{id}",
+            get(get_user).patch(update_user).delete(delete_user),
+        )
         .with_state(state)
 }

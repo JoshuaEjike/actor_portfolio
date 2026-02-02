@@ -189,11 +189,11 @@ pub async fn update_user(
         ));
     }
 
-    if id != user_id {
-        return Err(ApiErrors::Unauthorized(
-            "You are not allowed to use this route".to_string(),
-        ));
-    }
+    // if id != user_id {
+    //     return Err(ApiErrors::Unauthorized(
+    //         "You are not allowed to use this route".to_string(),
+    //     ));
+    // }
 
     let name_data = payload.name.as_deref().map(Text::new).transpose()?;
 
