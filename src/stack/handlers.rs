@@ -118,13 +118,10 @@ pub async fn update_stack(
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
-    let title = payload.title.as_deref().map(Text::new).transpose()?;
-
     let slug = payload.slug.as_deref().map(Text::new).transpose()?;
 
     let stack = UpdatedStackData {
         stack_id,
-        title,
         slug,
         edited_by: id,
         edited_by_name: name,
@@ -151,6 +148,12 @@ pub async fn update_stack(
 }
 
 pub async fn delete_stack(
+     AuthUser {
+        id: _,
+        email: _,
+        name: _,
+        roles: _,
+    }: AuthUser,
     State(state): State<AppState>,
     Path(stack_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
