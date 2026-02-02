@@ -63,7 +63,7 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.unwrap();
 
-    println!("🚀 Server running at http://{addr}");
+    println!("🚀 Server runnings at http://{addr}");
 
     axum::serve(listener, app).await.unwrap();
 }
