@@ -148,7 +148,7 @@ pub async fn update_stack(
 }
 
 pub async fn delete_stack(
-     AuthUser {
+    AuthUser {
         id: _,
         email: _,
         name: _,

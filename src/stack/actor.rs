@@ -98,6 +98,10 @@ impl StackActor {
             .await
             .map_err(|_| ApiErrors::InternalServerError("Update failed".to_string()))?;
 
+        if result.rows_affected() == 0 {
+            return Err(ApiErrors::NotFound("Stack not found".to_string()));
+        }
+
         Ok(result.rows_affected() > 0)
     }
 
@@ -106,6 +110,10 @@ impl StackActor {
             .execute(&self.pool)
             .await
             .map_err(|_| ApiErrors::InternalServerError("Delete failed".to_string()))?;
+
+        if result.rows_affected() == 0 {
+            return Err(ApiErrors::NotFound("Stack not found".to_string()));
+        }
 
         Ok(result.rows_affected() > 0)
     }
