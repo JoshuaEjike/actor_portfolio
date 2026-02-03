@@ -5,6 +5,7 @@ mod core;
 mod errors;
 mod extractor;
 mod fields;
+mod image;
 mod payload_handler;
 mod response;
 mod stack;
@@ -20,6 +21,7 @@ use auth::{actor::AuthActor, messages::AuthMessage};
 use crate::{
     api::app_apis,
     config::Config,
+    image::{actor::ImageActor, messages::ImageMessage},
     stack::{actor::StackActor, messages::StackMessage},
     state::AppState,
 };
@@ -38,6 +40,8 @@ async fn main() {
 
     let (stack_tx, stack_rx) = mpsc::channel::<StackMessage>(32);
 
+    let (image_tx, image_rx) = mpsc::channel::<ImageMessage>(32);
+
     tokio::spawn(
         AuthActor::new(
             pool.clone(),
@@ -49,9 +53,19 @@ async fn main() {
 
     tokio::spawn(StackActor::new(pool.clone()).run(stack_rx));
 
+    tokio::spawn(
+        ImageActor::new(
+            config.cloud_name,
+            config.cloud_api_key,
+            config.cloud_api_secret,
+        )
+        .run(image_rx),
+    );
+
     let app_state = AppState {
         auth_tx,
         stack_tx,
+        image_tx,
         jwt_secret: config.jwt_secret.clone(),
     };
 
