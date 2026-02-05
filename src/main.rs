@@ -1,5 +1,6 @@
 mod api;
 mod auth;
+mod blog;
 mod config;
 mod core;
 mod errors;
@@ -20,6 +21,7 @@ use auth::{actor::AuthActor, messages::AuthMessage};
 
 use crate::{
     api::app_apis,
+    blog::{actor::BlogActor, messages::BlogMessage},
     config::Config,
     image::{actor::ImageActor, messages::ImageMessage},
     stack::{actor::StackActor, messages::StackMessage},
@@ -42,6 +44,8 @@ async fn main() {
 
     let (image_tx, image_rx) = mpsc::channel::<ImageMessage>(32);
 
+    let (blog_tx, blog_rx) = mpsc::channel::<BlogMessage>(32);
+
     tokio::spawn(
         AuthActor::new(
             pool.clone(),
@@ -62,10 +66,13 @@ async fn main() {
         .run(image_rx),
     );
 
+    tokio::spawn(BlogActor::new(pool.clone()).run(blog_rx));
+
     let app_state = AppState {
         auth_tx,
         stack_tx,
         image_tx,
+        blog_tx,
         jwt_secret: config.jwt_secret.clone(),
     };
 
