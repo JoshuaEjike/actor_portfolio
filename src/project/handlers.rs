@@ -7,18 +7,20 @@ use uuid::Uuid;
 
 use crate::{
     errors::api_errors::ApiErrors,
-    extractor::auth_extractor::AuthUser,
-    fields::text::Text,
-    payload_handler::stack_payload_handler::StackCreateRequest,
-    response::general_response::ResponseMessage,
-    stack::{
-        dto::{CreateStackData, UpdateStackRequest, UpdatedStackData},
-        messages::StackMessage,
+    extractor::{
+        auth_extractor::AuthUser,
+        image_stack_extractor::{ProjectCreateInput, ProjectUpateInput},
     },
+    fields::text::Text,
+    project::{
+        dto::{CreateProjectData, UpdatedProjectData},
+        messages::ProjectMessage,
+    },
+    response::general_response::ResponseMessage,
     state::AppState,
 };
 
-pub async fn create_stack(
+pub async fn create_project(
     AuthUser {
         id,
         email,
@@ -26,78 +28,78 @@ pub async fn create_stack(
         roles: _,
     }: AuthUser,
     State(state): State<AppState>,
-    Json(payload): Json<StackCreateRequest>,
+    payload: ProjectCreateInput,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
-    let payload_data = payload.validate()?;
-
     let (tx, rx) = oneshot::channel();
 
-    let title = Text::new(&payload_data.title)?;
+    let title = Text::new(&payload.title)?;
 
-    let slug = Text::new(&payload_data.slug)?;
+    let description = Text::new(&payload.description)?;
 
-    let stack = CreateStackData {
+    let stack = Text::new(&payload.stack)?;
+
+    let project = CreateProjectData {
         title,
-        slug,
+        description,
+        stack,
+        content: payload.content,
+        image: payload.image,
+        image_id: payload.image_id,
         created_by: id,
         created_by_name: name,
         created_by_email: email,
     };
 
     state
-        .stack_tx
-        .send(StackMessage::Create {
-            stack,
+        .project_tx
+        .send(ProjectMessage::Create {
+            project,
             respond_to: tx,
         })
         .await
-        .map_err(|_| ApiErrors::InternalServerError("Stack service unavailable".to_string()))?;
+        .map_err(|_| ApiErrors::InternalServerError("Project service unavailable".to_string()))?;
 
-    let stack_id = rx
+    let blog_id = rx
         .await
-        .map_err(|_| ApiErrors::InternalServerError("Stack failed".to_string()))??;
+        .map_err(|_| ApiErrors::InternalServerError("Project failed".to_string()))??;
 
     let response = ResponseMessage {
-        message: format!("Stack created: {stack_id}"),
+        message: format!("Project created: {blog_id}"),
     };
 
     Ok(Json(serde_json::json!(response)))
 }
 
-pub async fn get_single_stack(
+pub async fn get_single_project(
     State(state): State<AppState>,
-    Path(stack_id): Path<Uuid>,
+    Path(project_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
     state
-        .stack_tx
-        .send(StackMessage::GetSingleStack {
-            stack_id,
+        .project_tx
+        .send(ProjectMessage::GetSingleProject {
+            project_id,
             respond_to: tx,
         })
         .await
         .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
 
-    let stack = rx
+    let blog = rx
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(stack)))
+    Ok(Json(serde_json::json!(blog)))
 }
 
-pub async fn get_single_stack_by_title(
+pub async fn get_all_project(
     State(state): State<AppState>,
-    Path(stack_title): Path<String>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
     state
-        .stack_tx
-        .send(StackMessage::GetSingleStackByTitle {
-            stack_title,
-            respond_to: tx,
-        })
+        .project_tx
+        .send(ProjectMessage::GetAllProject { respond_to: tx })
         .await
         .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
 
@@ -108,52 +110,22 @@ pub async fn get_single_stack_by_title(
     Ok(Json(serde_json::json!(stack)))
 }
 
-pub async fn get_all_stack(
-    State(state): State<AppState>,
-) -> Result<Json<serde_json::Value>, ApiErrors> {
-    let (tx, rx) = oneshot::channel();
-
-    state
-        .stack_tx
-        .send(StackMessage::GetAllStack { respond_to: tx })
-        .await
-        .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
-
-    let stack = rx
-        .await
-        .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
-
-    Ok(Json(serde_json::json!(stack)))
-}
-
-pub async fn update_stack(
+pub async fn delete_project(
     AuthUser {
-        id,
-        email,
-        name,
+        id: _,
+        email: _,
+        name: _,
         roles: _,
     }: AuthUser,
     State(state): State<AppState>,
-    Path(stack_id): Path<Uuid>,
-    // TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
-    Json(payload): Json<UpdateStackRequest>,
+    Path(project_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
-    let slug = payload.slug.as_deref().map(Text::new).transpose()?;
-
-    let stack = UpdatedStackData {
-        stack_id,
-        slug,
-        edited_by: id,
-        edited_by_name: name,
-        edited_by_email: email,
-    };
-
     state
-        .stack_tx
-        .send(StackMessage::UpdateStack {
-            stack,
+        .project_tx
+        .send(ProjectMessage::DeleteProject {
+            project_id,
             respond_to: tx,
         })
         .await
@@ -169,22 +141,35 @@ pub async fn update_stack(
     Ok(Json(serde_json::json!(response)))
 }
 
-pub async fn delete_stack(
+pub async fn update_project(
     AuthUser {
-        id: _,
-        email: _,
-        name: _,
+        id,
+        email,
+        name,
         roles: _,
     }: AuthUser,
     State(state): State<AppState>,
-    Path(stack_id): Path<Uuid>,
+    Path(project_id): Path<Uuid>,
+    payload: ProjectUpateInput,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
+    let project = UpdatedProjectData {
+        project_id,
+        description: payload.description,
+        stack: payload.stack,
+        content: payload.content,
+        image: payload.image,
+        image_id: payload.image_id,
+        edited_by: id,
+        edited_by_name: name,
+        edited_by_email: email,
+    };
+
     state
-        .stack_tx
-        .send(StackMessage::DeleteStack {
-            stack_id,
+        .project_tx
+        .send(ProjectMessage::UpdateProject {
+            project,
             respond_to: tx,
         })
         .await

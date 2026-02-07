@@ -66,6 +66,27 @@ impl StackActor {
         })
     }
 
+    pub async fn get_single_stack_by_title(
+        &self,
+        stack_title: String,
+    ) -> Result<StackResponse, ApiErrors> {
+        let stack = sqlx::query!(
+            "SELECT title, id, slug, created_at, updated_at FROM stack WHERE title = $1",
+            stack_title
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|_| ApiErrors::NotFound("Stack not found".to_string()))?;
+
+        Ok(StackResponse {
+            id: stack.id,
+            title: Text(stack.title),
+            slug: Text(stack.slug),
+            created_at: stack.created_at,
+            updated_at: stack.updated_at,
+        })
+    }
+
     pub async fn get_all_stack(&self) -> Result<Vec<StackResponse>, ApiErrors> {
         let stack = sqlx::query!(
             "SELECT id, title, slug, created_at, updated_at FROM stack ORDER BY created_at DESC"

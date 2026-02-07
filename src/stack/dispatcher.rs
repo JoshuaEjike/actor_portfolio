@@ -15,6 +15,13 @@ pub async fn stack_dispatcher(actor: &StackActor, mut rx: mpsc::Receiver<StackMe
                 let _ = respond_to.send(actor.get_single_stack(stack_id).await);
             }
 
+            StackMessage::GetSingleStackByTitle {
+                stack_title,
+                respond_to,
+            } => {
+                let _ = respond_to.send(actor.get_single_stack_by_title(stack_title).await);
+            }
+
             StackMessage::GetAllStack { respond_to } => {
                 let _ = respond_to.send(actor.get_all_stack().await);
             }

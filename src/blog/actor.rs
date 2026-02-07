@@ -78,7 +78,7 @@ impl BlogActor {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|_| ApiErrors::InternalServerError("Failed to fetch stack".to_string()))?;
+        .map_err(|_| ApiErrors::InternalServerError("Failed to fetch project".to_string()))?;
 
         Ok(blog
             .into_iter()
@@ -117,11 +117,11 @@ impl BlogActor {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn delete_blog(&self, stack_id: Uuid) -> Result<bool, ApiErrors> {
-        let result = sqlx::query!("DELETE FROM blog WHERE id = $1", stack_id)
+    pub async fn delete_blog(&self, blog_id: Uuid) -> Result<bool, ApiErrors> {
+        let result = sqlx::query!("DELETE FROM blog WHERE id = $1", blog_id)
             .execute(&self.pool)
             .await
-            .map_err(|_| ApiErrors::InternalServerError("Delete failed".to_string()))?;
+            .map_err(|_| ApiErrors::InternalServerError("Blog Delete failed".to_string()))?;
 
         if result.rows_affected() == 0 {
             return Err(ApiErrors::NotFound("Blog not found".to_string()));

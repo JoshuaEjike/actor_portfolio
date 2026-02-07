@@ -8,6 +8,7 @@ mod extractor;
 mod fields;
 mod image;
 mod payload_handler;
+mod project;
 mod response;
 mod stack;
 mod state;
@@ -24,6 +25,7 @@ use crate::{
     blog::{actor::BlogActor, messages::BlogMessage},
     config::Config,
     image::{actor::ImageActor, messages::ImageMessage},
+    project::{actor::ProjectActor, messages::ProjectMessage},
     stack::{actor::StackActor, messages::StackMessage},
     state::AppState,
 };
@@ -45,6 +47,8 @@ async fn main() {
     let (image_tx, image_rx) = mpsc::channel::<ImageMessage>(32);
 
     let (blog_tx, blog_rx) = mpsc::channel::<BlogMessage>(32);
+
+    let (project_tx, project_rx) = mpsc::channel::<ProjectMessage>(32);
 
     tokio::spawn(
         AuthActor::new(
@@ -68,11 +72,14 @@ async fn main() {
 
     tokio::spawn(BlogActor::new(pool.clone()).run(blog_rx));
 
+    tokio::spawn(ProjectActor::new(pool.clone()).run(project_rx));
+
     let app_state = AppState {
         auth_tx,
         stack_tx,
         image_tx,
         blog_tx,
+        project_tx,
         jwt_secret: config.jwt_secret.clone(),
     };
 

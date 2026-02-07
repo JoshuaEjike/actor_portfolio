@@ -28,6 +28,11 @@ pub enum StackMessage {
         respond_to: oneshot::Sender<Result<StackResponse, ApiErrors>>,
     },
 
+    GetSingleStackByTitle {
+        stack_title: String,
+        respond_to: oneshot::Sender<Result<StackResponse, ApiErrors>>,
+    },
+
     GetAllStack {
         respond_to: oneshot::Sender<Result<Vec<StackResponse>, ApiErrors>>,
     },
