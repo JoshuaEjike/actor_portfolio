@@ -34,6 +34,8 @@ pub async fn create_project(
 
     let title = Text::new(&payload.title)?;
 
+    println!("{title:?}");
+
     let description = Text::new(&payload.description)?;
 
     let stack = Text::new(&payload.stack)?;
