@@ -9,9 +9,11 @@ mod fields;
 mod image;
 mod payload_handler;
 mod project;
+mod refresh_token;
 mod response;
 mod stack;
 mod state;
+mod utils;
 
 use std::net::SocketAddr;
 
@@ -26,6 +28,9 @@ use crate::{
     config::Config,
     image::{actor::ImageActor, messages::ImageMessage},
     project::{actor::ProjectActor, messages::ProjectMessage},
+    refresh_token::{
+        actor::RefreshTokenActor, messages::RefreshTokenMessage, repo_sqlx::RefreshTokenRepoSqlx,
+    },
     stack::{actor::StackActor, messages::StackMessage},
     state::AppState,
 };
@@ -50,11 +55,11 @@ async fn main() {
 
     let (project_tx, project_rx) = mpsc::channel::<ProjectMessage>(32);
 
+    let (refresh_token_tx, refresh_token_rx) = mpsc::channel::<RefreshTokenMessage>(32);
+
     tokio::spawn(
         AuthActor::new(
             pool.clone(),
-            config.jwt_secret.clone(),
-            config.jwt_expiry_hour,
         )
         .run(auth_rx),
     );
@@ -74,12 +79,24 @@ async fn main() {
 
     tokio::spawn(ProjectActor::new(pool.clone()).run(project_rx));
 
+    let refresh_token_repo = RefreshTokenRepoSqlx { pool: pool.clone() };
+
+    tokio::spawn(
+        RefreshTokenActor::new(
+            refresh_token_repo,
+            config.jwt_secret.clone(),
+            config.jwt_expiry_hour,
+        )
+        .run(refresh_token_rx),
+    );
+
     let app_state = AppState {
         auth_tx,
         stack_tx,
         image_tx,
         blog_tx,
         project_tx,
+        refresh_token_tx,
         jwt_secret: config.jwt_secret.clone(),
     };
 

@@ -4,10 +4,12 @@ use axum::{
 };
 
 use tokio::sync::oneshot;
+use tower_cookies::Cookies;
 use uuid::Uuid;
 
 use crate::{
     auth::{dto::*, messages::AuthMessage},
+    core::login_token_core::login_token_core,
     errors::api_errors::ApiErrors,
     extractor::auth_extractor::AuthUser,
     fields::{
@@ -90,6 +92,7 @@ pub async fn register(
 }
 
 pub async fn login(
+    cookies: Cookies,
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
@@ -110,13 +113,15 @@ pub async fn login(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Auth service unavailable".to_string()))?;
 
-    let token = rx
+    let response = rx
         .await
         .map_err(|_| ApiErrors::InternalServerError("Auth failed".to_string()))??;
 
+    let tokens = login_token_core(&state.refresh_token_tx, cookies, response.id).await?;
+
     let response = ResponseTokenMessage {
         message: "success".to_string(),
-        token,
+        token: tokens.access_token,
     };
 
     Ok(Json(serde_json::json!(response)))

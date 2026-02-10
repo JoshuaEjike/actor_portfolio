@@ -1,13 +1,10 @@
 use crate::{
     auth::{
         dispatcher::auth_dispatcher,
-        dto::{RegisteredData, UpdatedData},
+        dto::{LoginResponse, RegisteredData, UpdatedData},
         messages::{AuthMessage, UserResponse},
     },
-    core::{
-        jwt::generate_token,
-        password_core::{hash_password, verify_password},
-    },
+    core::password_core::{hash_password, verify_password},
     errors::api_errors::ApiErrors,
     fields::{
         email::Email, password::Password, phone_number::PhoneNumber, roles::Roles, text::Text,
@@ -20,16 +17,12 @@ use uuid::Uuid;
 
 pub struct AuthActor {
     pool: PgPool,
-    jwt_secret: String,
-    jwt_expiry_hour: i64,
 }
 
 impl AuthActor {
-    pub fn new(pool: PgPool, jwt_secret: String, jwt_expiry_hour: i64) -> Self {
+    pub fn new(pool: PgPool) -> Self {
         Self {
             pool,
-            jwt_secret,
-            jwt_expiry_hour,
         }
     }
 
@@ -66,7 +59,11 @@ impl AuthActor {
         Ok(id)
     }
 
-    pub async fn login(&self, email: Email, password: Password) -> Result<String, ApiErrors> {
+    pub async fn login(
+        &self,
+        email: Email,
+        password: Password,
+    ) -> Result<LoginResponse, ApiErrors> {
         let record = sqlx::query!(
             "SELECT id, password FROM users WHERE email = $1",
             email.as_str()
@@ -78,10 +75,9 @@ impl AuthActor {
         verify_password(password.as_str(), &record.password)
             .map_err(|e| ApiErrors::PasswordFail(e.to_string()))?;
 
-        let token = generate_token(record.id, &self.jwt_secret, self.jwt_expiry_hour)
-            .map_err(|e| ApiErrors::InternalServerError(e.to_string()))?;
+        // let token = generate_token(record.id, &self.jwt_secret, self.jwt_expiry_hour)?;
 
-        Ok(token)
+        Ok(LoginResponse { id: record.id })
     }
 
     pub async fn get_user(&self, user_id: Uuid) -> Result<UserResponse, ApiErrors> {

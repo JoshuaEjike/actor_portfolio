@@ -3,7 +3,7 @@ use tokio::sync::oneshot;
 use uuid::Uuid;
 
 use crate::{
-    auth::dto::{RegisteredData, UpdatedData},
+    auth::dto::{LoginResponse, RegisteredData, UpdatedData},
     errors::api_errors::ApiErrors,
     fields::{
         email::Email, password::Password, phone_number::PhoneNumber, roles::Roles, text::Text,
@@ -29,7 +29,7 @@ pub enum AuthMessage {
     Login {
         email: Email,
         password: Password,
-        respond_to: oneshot::Sender<Result<String, ApiErrors>>,
+        respond_to: oneshot::Sender<Result<LoginResponse, ApiErrors>>,
     },
 
     GetUser {

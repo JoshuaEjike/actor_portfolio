@@ -18,7 +18,7 @@ pub fn generate_token(
     user_id: Uuid,
     jwt_secret: &str,
     jwt_expiry_hour: i64,
-) -> Result<String, &'static str> {
+) -> Result<String, ApiErrors> {
     let claims = Claims {
         sub: user_id,
         exp: (chrono::Utc::now() + chrono::Duration::hours(jwt_expiry_hour)).timestamp() as usize,
@@ -29,7 +29,7 @@ pub fn generate_token(
         &claims,
         &EncodingKey::from_secret(jwt_secret.as_bytes()),
     )
-    .map_err(|_| "Token generation failed")
+    .map_err(|_| ApiErrors::InternalServerError("Token generation failed".to_string()))
 }
 
 pub fn decode_token(token: &str, jwt_secret: &str) -> Result<Claims, ApiErrors> {
@@ -67,4 +67,8 @@ pub async fn validate_user_token(
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
     Ok(user)
+}
+
+pub fn generate_refresh_token() -> String {
+    Uuid::new_v4().to_string()
 }

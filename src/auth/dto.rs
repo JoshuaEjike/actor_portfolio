@@ -45,3 +45,7 @@ pub struct UpdateUserRequest {
     pub phone_number: Option<String>,
     pub roles: Option<String>,
 }
+
+pub struct LoginResponse {
+    pub id: Uuid,
+}
