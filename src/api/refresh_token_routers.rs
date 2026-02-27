@@ -1,4 +1,7 @@
-use crate::{refresh_token::handlers::{logout, refresh}, state::AppState};
+use crate::{
+    refresh_token::handlers::{logout, refresh},
+    state::AppState,
+};
 use axum::{Router, routing::post};
 use tower_cookies::CookieManagerLayer;
 

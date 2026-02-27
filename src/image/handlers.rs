@@ -42,8 +42,6 @@ pub async fn upload_form(
         .map_err(|_| ApiErrors::InternalServerError("Invalid form".to_string()))?
         .ok_or_else(|| ApiErrors::BadRequest("No file provided".to_string()))?;
 
-    println!("this worked");
-
     let bytes = field
         .bytes()
         .await

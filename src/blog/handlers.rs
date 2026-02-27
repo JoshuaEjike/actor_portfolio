@@ -13,7 +13,7 @@ use crate::{
     errors::api_errors::ApiErrors,
     extractor::{
         auth_extractor::AuthUser,
-        image_extractor::{BlogCreateInput, BlogUpateInput},
+        blog_extractor::{BlogCreateInput, BlogUpateInput},
     },
     fields::text::Text,
     response::general_response::ResponseMessage,
@@ -22,10 +22,7 @@ use crate::{
 
 pub async fn create_blog(
     AuthUser {
-        id,
-        email,
-        name,
-        roles: _,
+        id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
     payload: BlogCreateInput,
@@ -108,12 +105,7 @@ pub async fn get_all_blog(
 }
 
 pub async fn delete_blog(
-    AuthUser {
-        id: _,
-        email: _,
-        name: _,
-        roles: _,
-    }: AuthUser,
+    _: AuthUser,
     State(state): State<AppState>,
     Path(blog_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
@@ -140,10 +132,7 @@ pub async fn delete_blog(
 
 pub async fn update_blog(
     AuthUser {
-        id,
-        email,
-        name,
-        roles: _,
+        id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
     Path(blog_id): Path<Uuid>,

@@ -57,12 +57,7 @@ async fn main() {
 
     let (refresh_token_tx, refresh_token_rx) = mpsc::channel::<RefreshTokenMessage>(32);
 
-    tokio::spawn(
-        AuthActor::new(
-            pool.clone(),
-        )
-        .run(auth_rx),
-    );
+    tokio::spawn(AuthActor::new(pool.clone()).run(auth_rx));
 
     tokio::spawn(StackActor::new(pool.clone()).run(stack_rx));
 

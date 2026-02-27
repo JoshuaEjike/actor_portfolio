@@ -9,7 +9,7 @@ use crate::{
     errors::api_errors::ApiErrors,
     extractor::{
         auth_extractor::AuthUser,
-        image_stack_extractor::{ProjectCreateInput, ProjectUpateInput},
+        project_extractor::{ProjectCreateInput, ProjectUpateInput},
     },
     fields::text::Text,
     project::{
@@ -22,10 +22,7 @@ use crate::{
 
 pub async fn create_project(
     AuthUser {
-        id,
-        email,
-        name,
-        roles: _,
+        id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
     payload: ProjectCreateInput,
@@ -113,12 +110,7 @@ pub async fn get_all_project(
 }
 
 pub async fn delete_project(
-    AuthUser {
-        id: _,
-        email: _,
-        name: _,
-        roles: _,
-    }: AuthUser,
+    _: AuthUser,
     State(state): State<AppState>,
     Path(project_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
@@ -145,10 +137,7 @@ pub async fn delete_project(
 
 pub async fn update_project(
     AuthUser {
-        id,
-        email,
-        name,
-        roles: _,
+        id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
     Path(project_id): Path<Uuid>,

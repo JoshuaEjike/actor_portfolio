@@ -21,9 +21,7 @@ pub struct AuthActor {
 
 impl AuthActor {
     pub fn new(pool: PgPool) -> Self {
-        Self {
-            pool,
-        }
+        Self { pool }
     }
 
     pub async fn run(self, rx: mpsc::Receiver<AuthMessage>) {

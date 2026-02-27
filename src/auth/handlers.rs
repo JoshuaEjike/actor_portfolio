@@ -128,6 +128,7 @@ pub async fn login(
 }
 
 pub async fn get_user(
+    _: AuthUser,
     State(state): State<AppState>,
     Path(user_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
@@ -240,6 +241,7 @@ pub async fn update_user(
 }
 
 pub async fn delete_user(
+    _: AuthUser,
     State(state): State<AppState>,
     Path(user_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {

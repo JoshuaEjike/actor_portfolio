@@ -32,6 +32,9 @@ pub enum ApiErrors {
 
     #[error("Server Error: {0}")]
     InternalServerError(String),
+
+    #[error("Error: {0}")]
+    MethodNotAllowed(String),
 }
 
 impl IntoResponse for ApiErrors {
@@ -45,6 +48,7 @@ impl IntoResponse for ApiErrors {
             ApiErrors::EmailValidation(msg) => (StatusCode::BAD_REQUEST, msg),
             ApiErrors::TextValidation(msg) => (StatusCode::BAD_REQUEST, msg),
             ApiErrors::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            ApiErrors::MethodNotAllowed(msg) => (StatusCode::METHOD_NOT_ALLOWED, msg),
         };
 
         let body = serde_json::to_string(&ErrorResponse { message })

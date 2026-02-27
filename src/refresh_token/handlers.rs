@@ -20,8 +20,6 @@ pub async fn refresh(
         .value()
         .to_string();
 
-    println!("{refresh:?}");
-
     let (tx, rx) = oneshot::channel();
 
     state

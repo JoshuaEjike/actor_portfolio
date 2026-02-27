@@ -20,10 +20,7 @@ use crate::{
 
 pub async fn create_stack(
     AuthUser {
-        id,
-        email,
-        name,
-        roles: _,
+        id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
     Json(payload): Json<StackCreateRequest>,
@@ -128,10 +125,7 @@ pub async fn get_all_stack(
 
 pub async fn update_stack(
     AuthUser {
-        id,
-        email,
-        name,
-        roles: _,
+        id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
     Path(stack_id): Path<Uuid>,
@@ -170,12 +164,7 @@ pub async fn update_stack(
 }
 
 pub async fn delete_stack(
-    AuthUser {
-        id: _,
-        email: _,
-        name: _,
-        roles: _,
-    }: AuthUser,
+    _: AuthUser,
     State(state): State<AppState>,
     Path(stack_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
