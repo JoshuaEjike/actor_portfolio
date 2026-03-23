@@ -37,16 +37,16 @@ impl AuthActor {
         let created_at = chrono::Utc::now().naive_utc();
 
         sqlx::query!(
-            "INSERT INTO users (id, email, password, name, phone_number, roles, created_by, created_by_name, created_by_email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+            "INSERT INTO users (id, email, password, name, phone_number, roles, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
             id,
             user.email.as_str(),
             hash,
             user.name.as_str(),
             user.phone_number.as_ref().map(|p| p.as_str()),
             user.roles.as_str(),
-            user.created_by,
-            user.created_by_name.as_str(),
-            user.created_by_email.as_str(),
+            // user.created_by,
+            // user.created_by_name.as_str(),
+            // user.created_by_email.as_str(),
             created_at,
             created_at,
         )

@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::State,
 };
 use tokio::sync::oneshot;
 use uuid::Uuid;
@@ -8,8 +8,7 @@ use uuid::Uuid;
 use crate::{
     errors::api_errors::ApiErrors,
     extractor::{
-        auth_extractor::AuthUser,
-        project_extractor::{ProjectCreateInput, ProjectUpateInput},
+        auth_extractor::AuthUser, path_id_extractor::PathParam, project_extractor::{ProjectCreateInput, ProjectUpateInput}
     },
     fields::text::Text,
     project::{
@@ -71,7 +70,7 @@ pub async fn create_project(
 
 pub async fn get_single_project(
     State(state): State<AppState>,
-    Path(project_id): Path<Uuid>,
+         PathParam(project_id): PathParam<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -112,7 +111,7 @@ pub async fn get_all_project(
 pub async fn delete_project(
     _: AuthUser,
     State(state): State<AppState>,
-    Path(project_id): Path<Uuid>,
+         PathParam(project_id): PathParam<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -140,7 +139,7 @@ pub async fn update_project(
         id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
-    Path(project_id): Path<Uuid>,
+       PathParam(project_id): PathParam<Uuid>,
     payload: ProjectUpateInput,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();

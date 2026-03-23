@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::State,
 };
 
 use tokio::sync::oneshot;
@@ -11,7 +11,7 @@ use crate::{
     auth::{dto::*, messages::AuthMessage},
     core::login_token_core::login_token_core,
     errors::api_errors::ApiErrors,
-    extractor::auth_extractor::AuthUser,
+    extractor::{auth_extractor::AuthUser, json_body::RequiredJson, path_id_extractor::PathParam},
     fields::{
         email::Email, password::Password, phone_number::PhoneNumber, roles::Roles, text::Text,
     },
@@ -21,30 +21,30 @@ use crate::{
 };
 
 pub async fn register(
-    AuthUser {
-        id,
-        email,
-        name,
-        roles,
-    }: AuthUser,
+    // AuthUser {
+    //     id,
+    //     email,
+    //     name,
+    //     roles,
+    // }: AuthUser,
     State(state): State<AppState>,
-    Json(payload): Json<RegisterRequest>,
+    RequiredJson(payload): RequiredJson<RegisterRequest>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let payload_data = payload.validate()?;
 
     let (tx, rx) = oneshot::channel();
 
-    if payload_data.roles == "root" {
-        return Err(ApiErrors::BadRequest(
-            "This Admin level cans't be create".to_string(),
-        ));
-    }
+    // if payload_data.roles == "root" {
+    //     return Err(ApiErrors::BadRequest(
+    //         "This Admin level cans't be create".to_string(),
+    //     ));
+    // }
 
-    if roles.as_str() == "normal" {
-        return Err(ApiErrors::BadRequest(
-            "Becuase of your ADMIN Level you can not create a user.".to_string(),
-        ));
-    }
+    // if roles.as_str() == "normal" {
+    //     return Err(ApiErrors::BadRequest(
+    //         "Becuase of your ADMIN Level you can not create a user.".to_string(),
+    //     ));
+    // }
 
     let email_data = Email::new(&payload_data.email)?;
 
@@ -66,9 +66,9 @@ pub async fn register(
         name: name_data,
         phone_number,
         roles: roles_data,
-        created_by: id,
-        created_by_name: name,
-        created_by_email: email,
+        // created_by: id,
+        // created_by_name: name,
+        // created_by_email: email,
     };
 
     state
@@ -94,7 +94,7 @@ pub async fn register(
 pub async fn login(
     cookies: Cookies,
     State(state): State<AppState>,
-    Json(payload): Json<LoginRequest>,
+    RequiredJson(payload): RequiredJson<LoginRequest>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -130,7 +130,7 @@ pub async fn login(
 pub async fn get_user(
     _: AuthUser,
     State(state): State<AppState>,
-    Path(user_id): Path<Uuid>,
+    PathParam(user_id): PathParam<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -175,9 +175,9 @@ pub async fn update_user(
         roles,
     }: AuthUser,
     State(state): State<AppState>,
-    Path(user_id): Path<Uuid>,
+    PathParam(user_id): PathParam<Uuid>,
     // TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
-    Json(payload): Json<UpdateUserRequest>,
+     RequiredJson(payload): RequiredJson<UpdateUserRequest>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -243,7 +243,7 @@ pub async fn update_user(
 pub async fn delete_user(
     _: AuthUser,
     State(state): State<AppState>,
-    Path(user_id): Path<Uuid>,
+    PathParam(user_id): PathParam<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 

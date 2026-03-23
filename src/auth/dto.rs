@@ -11,9 +11,9 @@ pub struct RegisteredData {
     pub name: Text,
     pub phone_number: Option<PhoneNumber>,
     pub roles: Roles,
-    pub created_by: Uuid,
-    pub created_by_name: Text,
-    pub created_by_email: Email,
+    // pub created_by: Uuid,
+    // pub created_by_name: Text,
+    // pub created_by_email: Email,
 }
 
 pub struct UpdatedData {

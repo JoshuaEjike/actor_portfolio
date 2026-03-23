@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::State,
 };
 use tokio::sync::oneshot;
 use uuid::Uuid;
@@ -13,7 +13,7 @@ use crate::{
     errors::api_errors::ApiErrors,
     extractor::{
         auth_extractor::AuthUser,
-        blog_extractor::{BlogCreateInput, BlogUpateInput},
+        blog_extractor::{BlogCreateInput, BlogUpateInput}, path_id_extractor::PathParam
     },
     fields::text::Text,
     response::general_response::ResponseMessage,
@@ -66,7 +66,7 @@ pub async fn create_blog(
 
 pub async fn get_single_blog(
     State(state): State<AppState>,
-    Path(blog_id): Path<Uuid>,
+    PathParam(blog_id): PathParam<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -107,7 +107,7 @@ pub async fn get_all_blog(
 pub async fn delete_blog(
     _: AuthUser,
     State(state): State<AppState>,
-    Path(blog_id): Path<Uuid>,
+    PathParam(blog_id): PathParam<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -135,7 +135,7 @@ pub async fn update_blog(
         id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
-    Path(blog_id): Path<Uuid>,
+      PathParam(blog_id): PathParam<Uuid>,
     // TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
     payload: BlogUpateInput,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {

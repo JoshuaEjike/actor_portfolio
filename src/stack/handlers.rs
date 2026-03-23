@@ -1,13 +1,13 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::State,
 };
 use tokio::sync::oneshot;
 use uuid::Uuid;
 
 use crate::{
     errors::api_errors::ApiErrors,
-    extractor::auth_extractor::AuthUser,
+    extractor::{auth_extractor::AuthUser, json_body::RequiredJson, path_id_extractor::PathParam},
     fields::text::Text,
     payload_handler::stack_payload_handler::StackCreateRequest,
     response::general_response::ResponseMessage,
@@ -23,7 +23,7 @@ pub async fn create_stack(
         id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
-    Json(payload): Json<StackCreateRequest>,
+    RequiredJson(payload): RequiredJson<StackCreateRequest>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let payload_data = payload.validate()?;
 
@@ -63,7 +63,7 @@ pub async fn create_stack(
 
 pub async fn get_single_stack(
     State(state): State<AppState>,
-    Path(stack_id): Path<Uuid>,
+    PathParam(stack_id): PathParam<Uuid>
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -85,7 +85,7 @@ pub async fn get_single_stack(
 
 pub async fn get_single_stack_by_title(
     State(state): State<AppState>,
-    Path(stack_title): Path<String>,
+    PathParam(stack_title): PathParam<String>
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -128,9 +128,9 @@ pub async fn update_stack(
         id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
-    Path(stack_id): Path<Uuid>,
+    PathParam(stack_id): PathParam<Uuid>,
     // TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
-    Json(payload): Json<UpdateStackRequest>,
+    RequiredJson(payload): RequiredJson<UpdateStackRequest>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -166,7 +166,7 @@ pub async fn update_stack(
 pub async fn delete_stack(
     _: AuthUser,
     State(state): State<AppState>,
-    Path(stack_id): Path<Uuid>,
+    PathParam(stack_id): PathParam<Uuid>
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
