@@ -1,7 +1,4 @@
-use axum::{
-    Json,
-    extract::State,
-};
+use axum::{Json, extract::State};
 use tokio::sync::oneshot;
 use uuid::Uuid;
 
@@ -63,7 +60,7 @@ pub async fn create_stack(
 
 pub async fn get_single_stack(
     State(state): State<AppState>,
-    PathParam(stack_id): PathParam<Uuid>
+    PathParam(stack_id): PathParam<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -85,7 +82,7 @@ pub async fn get_single_stack(
 
 pub async fn get_single_stack_by_title(
     State(state): State<AppState>,
-    PathParam(stack_title): PathParam<String>
+    PathParam(stack_title): PathParam<String>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
@@ -166,7 +163,7 @@ pub async fn update_stack(
 pub async fn delete_stack(
     _: AuthUser,
     State(state): State<AppState>,
-    PathParam(stack_id): PathParam<Uuid>
+    PathParam(stack_id): PathParam<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 

@@ -5,12 +5,15 @@ use axum::{
 use tokio::sync::oneshot;
 
 use crate::{
-    errors::api_errors::ApiErrors, extractor::json_body::RequiredJson, image::{dto::Base64Upload, messages::ImageMessage}, state::AppState
+    errors::api_errors::ApiErrors,
+    extractor::json_body::RequiredJson,
+    image::{dto::Base64Upload, messages::ImageMessage},
+    state::AppState,
 };
 
 pub async fn upload_base64(
     State(state): State<AppState>,
-     RequiredJson(payload): RequiredJson<Base64Upload>,
+    RequiredJson(payload): RequiredJson<Base64Upload>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 

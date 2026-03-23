@@ -17,17 +17,14 @@ where
 {
     type Rejection = ApiErrors;
 
-    async fn from_request_parts(
-        parts: &mut Parts,
-        state: &S,
-    ) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let Path(value): Path<String> = Path::from_request_parts(parts, state)
             .await
             .map_err(|_| ApiErrors::BadRequest("Invalid path parameter".into()))?;
 
-        let parsed = value.parse::<T>().map_err(|e| {
-            ApiErrors::BadRequest(format!("Invalid parameter: {}", e))
-        })?;
+        let parsed = value
+            .parse::<T>()
+            .map_err(|e| ApiErrors::BadRequest(format!("Invalid parameter: {}", e)))?;
 
         Ok(PathParam(parsed))
     }

@@ -1,7 +1,4 @@
-use axum::{
-    Json,
-    extract::State,
-};
+use axum::{Json, extract::State};
 
 use tokio::sync::oneshot;
 use tower_cookies::Cookies;
@@ -177,7 +174,7 @@ pub async fn update_user(
     State(state): State<AppState>,
     PathParam(user_id): PathParam<Uuid>,
     // TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
-     RequiredJson(payload): RequiredJson<UpdateUserRequest>,
+    RequiredJson(payload): RequiredJson<UpdateUserRequest>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 

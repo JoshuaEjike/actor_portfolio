@@ -1,7 +1,4 @@
-use axum::{
-    Json,
-    extract::State,
-};
+use axum::{Json, extract::State};
 use tokio::sync::oneshot;
 use uuid::Uuid;
 
@@ -13,7 +10,8 @@ use crate::{
     errors::api_errors::ApiErrors,
     extractor::{
         auth_extractor::AuthUser,
-        blog_extractor::{BlogCreateInput, BlogUpateInput}, path_id_extractor::PathParam
+        blog_extractor::{BlogCreateInput, BlogUpateInput},
+        path_id_extractor::PathParam,
     },
     fields::text::Text,
     response::general_response::ResponseMessage,
@@ -135,7 +133,7 @@ pub async fn update_blog(
         id, email, name, ..
     }: AuthUser,
     State(state): State<AppState>,
-      PathParam(blog_id): PathParam<Uuid>,
+    PathParam(blog_id): PathParam<Uuid>,
     // TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
     payload: BlogUpateInput,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
