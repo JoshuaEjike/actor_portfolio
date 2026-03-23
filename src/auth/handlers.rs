@@ -21,12 +21,12 @@ use crate::{
 };
 
 pub async fn register(
-    // AuthUser {
-    //     id,
-    //     email,
-    //     name,
-    //     roles,
-    // }: AuthUser,
+    AuthUser {
+        id,
+        email,
+        name,
+        roles,
+    }: AuthUser,
     State(state): State<AppState>,
     RequiredJson(payload): RequiredJson<RegisterRequest>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
@@ -34,17 +34,17 @@ pub async fn register(
 
     let (tx, rx) = oneshot::channel();
 
-    // if payload_data.roles == "root" {
-    //     return Err(ApiErrors::BadRequest(
-    //         "This Admin level cans't be create".to_string(),
-    //     ));
-    // }
+    if payload_data.roles == "root" {
+        return Err(ApiErrors::BadRequest(
+            "This Admin level cans't be create".to_string(),
+        ));
+    }
 
-    // if roles.as_str() == "normal" {
-    //     return Err(ApiErrors::BadRequest(
-    //         "Becuase of your ADMIN Level you can not create a user.".to_string(),
-    //     ));
-    // }
+    if roles.as_str() == "normal" {
+        return Err(ApiErrors::BadRequest(
+            "Becuase of your ADMIN Level you can not create a user.".to_string(),
+        ));
+    }
 
     let email_data = Email::new(&payload_data.email)?;
 
@@ -66,9 +66,9 @@ pub async fn register(
         name: name_data,
         phone_number,
         roles: roles_data,
-        // created_by: id,
-        // created_by_name: name,
-        // created_by_email: email,
+        created_by: id,
+        created_by_name: name,
+        created_by_email: email,
     };
 
     state
