@@ -8,6 +8,7 @@ pub struct ProjectCreateRequest {
     pub description: Option<String>,
     pub stack: Option<String>,
     pub content: Option<String>,
+    pub word_count: Option<i32>,
     pub image: Option<String>,
 }
 
@@ -29,6 +30,10 @@ impl ProjectCreateRequest {
             .content
             .ok_or_else(|| ApiErrors::BadRequest("Content is required".to_string()))?;
 
+        let word_count = self
+            .word_count
+            .ok_or_else(|| ApiErrors::BadRequest("Word Count is required".to_string()))?;
+
         let image = self
             .image
             .ok_or_else(|| ApiErrors::BadRequest("Image is required".to_string()))?;
@@ -38,6 +43,7 @@ impl ProjectCreateRequest {
             description,
             stack,
             content,
+            word_count,
             image,
         })
     }

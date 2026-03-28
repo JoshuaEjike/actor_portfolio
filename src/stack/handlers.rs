@@ -7,7 +7,6 @@ use crate::{
     extractor::{auth_extractor::AuthUser, json_body::RequiredJson, path_id_extractor::PathParam},
     fields::text::Text,
     payload_handler::stack_payload_handler::StackCreateRequest,
-    response::general_response::ResponseMessage,
     stack::{
         dto::{CreateStackData, UpdateStackRequest, UpdatedStackData},
         messages::StackMessage,
@@ -51,11 +50,10 @@ pub async fn create_stack(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Stack failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: format!("Stack created: {stack_id}"),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": { "id": stack_id }
+    })))
 }
 
 pub async fn get_single_stack(
@@ -77,7 +75,10 @@ pub async fn get_single_stack(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(stack)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": stack
+    })))
 }
 
 pub async fn get_single_stack_by_title(
@@ -99,7 +100,10 @@ pub async fn get_single_stack_by_title(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(stack)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": stack
+    })))
 }
 
 pub async fn get_all_stack(
@@ -113,11 +117,14 @@ pub async fn get_all_stack(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
 
-    let stack = rx
+    let stacks = rx
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(stack)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": stacks
+    })))
 }
 
 pub async fn update_stack(
@@ -153,11 +160,7 @@ pub async fn update_stack(
     rx.await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: "success".to_string(),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({"message": "success".to_string(),})))
 }
 
 pub async fn delete_stack(
@@ -179,9 +182,5 @@ pub async fn delete_stack(
     rx.await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: "success".to_string(),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({"message": "success".to_string(),})))
 }

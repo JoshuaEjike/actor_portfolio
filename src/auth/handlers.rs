@@ -13,7 +13,6 @@ use crate::{
         email::Email, password::Password, phone_number::PhoneNumber, roles::Roles, text::Text,
     },
     payload_handler::auth_payload_handler::{LoginRequest, RegisterRequest},
-    response::general_response::{ResponseMessage, ResponseTokenMessage},
     state::AppState,
 };
 
@@ -81,11 +80,10 @@ pub async fn register(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Auth failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: format!("User created: {user_id}"),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": { "user_id": user_id }
+    })))
 }
 
 pub async fn login(
@@ -116,12 +114,42 @@ pub async fn login(
 
     let tokens = login_token_core(&state.refresh_token_tx, cookies, response.id).await?;
 
-    let response = ResponseTokenMessage {
-        message: "success".to_string(),
-        token: tokens.access_token,
-    };
+    // let response = ResponseTokenMessage {
+    //     message: "success".to_string(),
+    //     token: tokens.access_token,
+    // };
 
-    Ok(Json(serde_json::json!(response)))
+    // Ok(Json(serde_json::json!(response)))
+
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": { "token": tokens.access_token },
+    })))
+}
+
+pub async fn get_current_user(
+    AuthUser { id, .. }: AuthUser,
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, ApiErrors> {
+    let (tx, rx) = oneshot::channel();
+
+    state
+        .auth_tx
+        .send(AuthMessage::GetUser {
+            user_id: id,
+            respond_to: tx,
+        })
+        .await
+        .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
+
+    let user = rx
+        .await
+        .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
+
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": user,
+    })))
 }
 
 pub async fn get_user(
@@ -144,7 +172,10 @@ pub async fn get_user(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(user)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": user,
+    })))
 }
 
 pub async fn get_all_users(
@@ -161,7 +192,11 @@ pub async fn get_all_users(
     let users = rx
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
-    Ok(Json(serde_json::json!(users)))
+
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": users,
+    })))
 }
 
 pub async fn update_user(
@@ -230,11 +265,7 @@ pub async fn update_user(
     rx.await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: "success".to_string(),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({"message": "success".to_string(),})))
 }
 
 pub async fn delete_user(
@@ -256,9 +287,5 @@ pub async fn delete_user(
     rx.await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: "success".to_string(),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({"message": "success".to_string(),})))
 }

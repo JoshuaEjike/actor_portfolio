@@ -4,10 +4,11 @@ use uuid::Uuid;
 use crate::fields::{email::Email, text::Text};
 
 pub struct CreateProjectData {
-    pub title: Text,
-    pub description: Text,
+    pub title: String,
+    pub description: String,
     pub stack: Text,
     pub content: String,
+    pub word_count: i32,
     pub image: String,
     pub image_id: String,
     pub created_by: Uuid,
@@ -18,9 +19,10 @@ pub struct CreateProjectData {
 #[derive(Debug)]
 pub struct UpdatedProjectData {
     pub project_id: Uuid,
-    pub description: Option<Text>,
+    pub description: Option<String>,
     pub stack: Option<Text>,
     pub content: Option<String>,
+    pub word_count: Option<i32>,
     pub image: Option<String>,
     pub image_id: Option<String>,
     pub edited_by: Uuid,
@@ -33,6 +35,7 @@ pub struct ValidatedCreateProjectData {
     pub description: String,
     pub stack: String,
     pub content: String,
+    pub word_count: i32,
     pub image: String,
 }
 
@@ -41,5 +44,6 @@ pub struct UpdateProjectRequest {
     pub description: Option<String>,
     pub stack: Option<String>,
     pub content: Option<String>,
+    pub word_count: Option<i32>,
     pub image: Option<String>,
 }

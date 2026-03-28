@@ -13,8 +13,6 @@ use crate::{
         blog_extractor::{BlogCreateInput, BlogUpateInput},
         path_id_extractor::PathParam,
     },
-    fields::text::Text,
-    response::general_response::ResponseMessage,
     state::AppState,
 };
 
@@ -27,14 +25,11 @@ pub async fn create_blog(
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
-    let title = Text::new(&payload.title)?;
-
-    let description = Text::new(&payload.description)?;
-
     let blog = CreateBlogData {
-        title,
-        description,
+        title: payload.title,
+        description: payload.description,
         content: payload.content,
+        word_count: payload.word_count,
         image: payload.image,
         image_id: payload.image_id,
         created_by: id,
@@ -55,11 +50,10 @@ pub async fn create_blog(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Stack failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: format!("Blog created: {blog_id}"),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": { "blog_id": blog_id }
+    })))
 }
 
 pub async fn get_single_blog(
@@ -81,7 +75,10 @@ pub async fn get_single_blog(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(blog)))
+    Ok(Json(serde_json::json!( {
+        "message": "success".to_string(),
+        "data": blog,
+    })))
 }
 
 pub async fn get_all_blog(
@@ -95,11 +92,14 @@ pub async fn get_all_blog(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
 
-    let stack = rx
+    let blogs = rx
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(stack)))
+    Ok(Json(serde_json::json!( {
+        "message": "success".to_string(),
+        "data": blogs,
+    })))
 }
 
 pub async fn delete_blog(
@@ -121,11 +121,7 @@ pub async fn delete_blog(
     rx.await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: "success".to_string(),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({"message": "success".to_string(),})))
 }
 
 pub async fn update_blog(
@@ -143,6 +139,7 @@ pub async fn update_blog(
         blog_id,
         description: payload.description,
         content: payload.content,
+        word_count: payload.word_count,
         image: payload.image,
         image_id: payload.image_id,
         edited_by: id,
@@ -162,9 +159,5 @@ pub async fn update_blog(
     rx.await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: "success".to_string(),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({"message": "success".to_string(),})))
 }

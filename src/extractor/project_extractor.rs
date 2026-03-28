@@ -17,6 +17,7 @@ pub struct ProjectCreateInput {
     pub description: String,
     pub stack: String,
     pub content: String,
+    pub word_count: i32,
     pub image: String,
     pub image_id: String,
 }
@@ -40,6 +41,7 @@ impl FromRequest<AppState> for ProjectCreateInput {
             description: payload_data.description,
             stack: payload_data.stack,
             content: payload_data.content,
+            word_count: payload_data.word_count,
             image: image.url,
             image_id: image.public_id,
         })
@@ -47,9 +49,10 @@ impl FromRequest<AppState> for ProjectCreateInput {
 }
 
 pub struct ProjectUpateInput {
-    pub description: Option<Text>,
+    pub description: Option<String>,
     pub stack: Option<Text>,
     pub content: Option<String>,
+    pub word_count: Option<i32>,
     pub image: Option<String>,
     pub image_id: Option<String>,
 }
@@ -61,8 +64,6 @@ impl FromRequest<AppState> for ProjectUpateInput {
         let Json(payload) = Json::<UpdateProjectRequest>::from_request(req, state)
             .await
             .map_err(|_| ApiErrors::BadRequest("Invalid request body".into()))?;
-
-        let description = payload.description.as_deref().map(Text::new).transpose()?;
 
         let stack = payload.stack.as_deref().map(Text::new).transpose()?;
 
@@ -82,9 +83,10 @@ impl FromRequest<AppState> for ProjectUpateInput {
         };
 
         Ok(ProjectUpateInput {
-            description,
+            description: payload.description,
             stack,
             content: payload.content,
+            word_count: payload.word_count,
             image,
             image_id,
         })

@@ -14,7 +14,6 @@ use crate::{
         dto::{CreateProjectData, UpdatedProjectData},
         messages::ProjectMessage,
     },
-    response::general_response::ResponseMessage,
     state::AppState,
 };
 
@@ -27,19 +26,14 @@ pub async fn create_project(
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
-    let title = Text::new(&payload.title)?;
-
-    println!("{title:?}");
-
-    let description = Text::new(&payload.description)?;
-
     let stack = Text::new(&payload.stack)?;
 
     let project = CreateProjectData {
-        title,
-        description,
+        title: payload.title,
+        description: payload.description,
         stack,
         content: payload.content,
+        word_count: payload.word_count,
         image: payload.image,
         image_id: payload.image_id,
         created_by: id,
@@ -56,15 +50,14 @@ pub async fn create_project(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Project service unavailable".to_string()))?;
 
-    let blog_id = rx
+    let project_id = rx
         .await
         .map_err(|_| ApiErrors::InternalServerError("Project failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: format!("Project created: {blog_id}"),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": { "id": project_id }
+    })))
 }
 
 pub async fn get_single_project(
@@ -82,11 +75,14 @@ pub async fn get_single_project(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
 
-    let blog = rx
+    let project = rx
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(blog)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": project
+    })))
 }
 
 pub async fn get_all_project(
@@ -100,11 +96,14 @@ pub async fn get_all_project(
         .await
         .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
 
-    let stack = rx
+    let projects = rx
         .await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    Ok(Json(serde_json::json!(stack)))
+    Ok(Json(serde_json::json!({
+        "message": "success".to_string(),
+        "data": projects
+    })))
 }
 
 pub async fn delete_project(
@@ -126,11 +125,7 @@ pub async fn delete_project(
     rx.await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: "success".to_string(),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(serde_json::json!({"message": "success".to_string(),})))
 }
 
 pub async fn update_project(
@@ -148,6 +143,7 @@ pub async fn update_project(
         description: payload.description,
         stack: payload.stack,
         content: payload.content,
+        word_count: payload.word_count,
         image: payload.image,
         image_id: payload.image_id,
         edited_by: id,
@@ -167,9 +163,7 @@ pub async fn update_project(
     rx.await
         .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
 
-    let response = ResponseMessage {
-        message: "success".to_string(),
-    };
-
-    Ok(Json(serde_json::json!(response)))
+    Ok(Json(
+        serde_json::json!({   "message": "success".to_string(),}),
+    ))
 }

@@ -31,12 +31,13 @@ impl ProjectActor {
         let created_at = chrono::Utc::now().naive_utc();
 
         sqlx::query!(
-            "INSERT INTO project (id, title, description, stack, content, image, image_id, created_by, created_by_name, created_by_email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+            "INSERT INTO project (id, title, description, stack, content, word_count, image, image_id, created_by, created_by_name, created_by_email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
             id,
-            project.title.as_str(),
-            project.description.as_str(),
+            project.title,
+            project.description,
             project.stack.as_str(),
             project.content,
+            project.word_count,
             project.image,
             project.image_id,
             project.created_by,
@@ -54,7 +55,7 @@ impl ProjectActor {
 
     pub async fn get_single_project(&self, project_id: Uuid) -> Result<ProjectResponse, ApiErrors> {
         let blog = sqlx::query!(
-            "SELECT id, title, description, stack, content, image, image_id, created_at, updated_at FROM project WHERE id = $1",
+            "SELECT id, title, description, stack, content, word_count, image, image_id, created_at, updated_at FROM project WHERE id = $1",
             project_id
         )
         .fetch_one(&self.pool)
@@ -63,10 +64,11 @@ impl ProjectActor {
 
         Ok(ProjectResponse {
             id: blog.id,
-            title: Text(blog.title),
-            description: Text(blog.description),
+            title: blog.title,
+            description: blog.description,
             stack: Text(blog.stack),
             content: blog.content,
+            word_count: blog.word_count,
             image: blog.image,
             image_id: blog.image_id,
             created_at: blog.created_at,
@@ -76,7 +78,7 @@ impl ProjectActor {
 
     pub async fn get_all_project(&self) -> Result<Vec<ProjectResponse>, ApiErrors> {
         let blog = sqlx::query!(
-            "SELECT id, title, description, stack, content, image, image_id, created_at, updated_at FROM project ORDER BY created_at DESC"
+            "SELECT id, title, description, stack, content, word_count, image, image_id, created_at, updated_at FROM project ORDER BY created_at DESC"
         )
         .fetch_all(&self.pool)
         .await
@@ -86,10 +88,11 @@ impl ProjectActor {
             .into_iter()
             .map(|blg| ProjectResponse {
                 id: blg.id,
-                title: Text(blg.title),
-                description: Text(blg.description),
+                title: blg.title,
+                description: blg.description,
                 stack: Text(blg.stack),
                 content: blg.content,
+                word_count: blg.word_count,
                 image: blg.image,
                 image_id: blg.image_id,
                 created_at: blg.created_at,
@@ -99,10 +102,11 @@ impl ProjectActor {
     }
 
     pub async fn update_project(&self, blog: UpdatedProjectData) -> Result<bool, ApiErrors> {
-        let result = sqlx::query!(r#"UPDATE project SET description = COALESCE($1, description), stack = COALESCE($2, stack), content = COALESCE($3, content), image = COALESCE($4, image), image_id = COALESCE($5, image_id), edited_by = $6, edited_by_name = $7, edited_by_email = $8 WHERE id = $9"#, 
-                blog.description.as_ref().map(|s| s.as_str()),
+        let result = sqlx::query!(r#"UPDATE project SET description = COALESCE($1, description), stack = COALESCE($2, stack), content = COALESCE($3, content), word_count = COALESCE($4, word_count), image = COALESCE($5, image), image_id = COALESCE($6, image_id), edited_by = $7, edited_by_name = $8, edited_by_email = $9 WHERE id = $10"#, 
+                blog.description,
                 blog.stack.as_ref().map(|s| s.as_str()),
                 blog.content,
+                blog.word_count,
                 blog.image,
                 blog.image_id,
                 blog.edited_by,

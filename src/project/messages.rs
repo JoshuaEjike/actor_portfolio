@@ -12,10 +12,11 @@ use crate::{
 #[derive(Serialize)]
 pub struct ProjectResponse {
     pub id: Uuid,
-    pub title: Text,
-    pub description: Text,
+    pub title: String,
+    pub description: String,
     pub stack: Text,
     pub content: String,
+    pub word_count: i32,
     pub image: String,
     pub image_id: String,
     pub created_at: NaiveDateTime,

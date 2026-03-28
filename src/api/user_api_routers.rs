@@ -6,7 +6,9 @@ use axum::{
 use tower_cookies::CookieManagerLayer;
 
 use crate::{
-    auth::handlers::{delete_user, get_all_users, get_user, login, register, update_user},
+    auth::handlers::{
+        delete_user, get_all_users, get_current_user, get_user, login, register, update_user,
+    },
     state::AppState,
 };
 
@@ -15,6 +17,7 @@ pub fn user_api_router(state: AppState) -> Router {
         .route("/register", post(register))
         .route("/login", post(login))
         .route("/users", get(get_all_users))
+        .route("/current_users", get(get_current_user))
         .route(
             "/users/{id}",
             get(get_user).patch(update_user).delete(delete_user),

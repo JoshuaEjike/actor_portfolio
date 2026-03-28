@@ -5,14 +5,16 @@ use axum::{
 
 use crate::{
     blog::dto::UpdateBlogRequest, core::image_core::base64_image_uploader_core,
-    errors::api_errors::ApiErrors, fields::text::Text,
-    payload_handler::blog_payload_handler::BlogCreateRequest, state::AppState,
+    errors::api_errors::ApiErrors, payload_handler::blog_payload_handler::BlogCreateRequest,
+    state::AppState,
 };
 
+#[derive(Debug)]
 pub struct BlogCreateInput {
     pub title: String,
     pub description: String,
     pub content: String,
+    pub word_count: i32,
     pub image: String,
     pub image_id: String,
 }
@@ -33,6 +35,7 @@ impl FromRequest<AppState> for BlogCreateInput {
             title: payload_data.title,
             description: payload_data.description,
             content: payload_data.content,
+            word_count: payload_data.word_count,
             image: image.url,
             image_id: image.public_id,
         })
@@ -40,8 +43,9 @@ impl FromRequest<AppState> for BlogCreateInput {
 }
 
 pub struct BlogUpateInput {
-    pub description: Option<Text>,
+    pub description: Option<String>,
     pub content: Option<String>,
+    pub word_count: Option<i32>,
     pub image: Option<String>,
     pub image_id: Option<String>,
 }
@@ -53,8 +57,6 @@ impl FromRequest<AppState> for BlogUpateInput {
         let Json(payload) = Json::<UpdateBlogRequest>::from_request(req, state)
             .await
             .map_err(|_| ApiErrors::BadRequest("Invalid request body".into()))?;
-
-        let description = payload.description.as_deref().map(Text::new).transpose()?;
 
         let image_data = if let Some(base64) = payload.image {
             Some(base64_image_uploader_core(base64, &state.image_tx).await?)
@@ -68,8 +70,9 @@ impl FromRequest<AppState> for BlogUpateInput {
         };
 
         Ok(BlogUpateInput {
-            description,
+            description: payload.description,
             content: payload.content,
+            word_count: payload.word_count,
             image,
             image_id,
         })

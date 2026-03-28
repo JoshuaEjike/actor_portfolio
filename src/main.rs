@@ -21,6 +21,9 @@ use sqlx::postgres::PgPoolOptions;
 use tokio::{net::TcpListener, sync::mpsc};
 
 use auth::{actor::AuthActor, messages::AuthMessage};
+use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
+use axum::http::{HeaderValue, Method};
+use tower_http::cors::CorsLayer;
 
 use crate::{
     api::app_apis,
@@ -95,7 +98,48 @@ async fn main() {
         jwt_secret: config.jwt_secret.clone(),
     };
 
-    let app = app_apis(app_state);
+    let allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://your-frontend-domain.com",
+    ];
+
+    // .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+
+    let cors = CorsLayer::new()
+        .allow_origin(
+            allowed_origins
+                .iter()
+                .map(|o| o.parse::<HeaderValue>().unwrap())
+                .collect::<Vec<_>>(),
+        )
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::OPTIONS,
+        ])
+        .allow_headers([AUTHORIZATION, CONTENT_TYPE])
+        .allow_credentials(true);
+
+    // let cors = CorsLayer::new()
+    // .allow_origin(
+    // allowed_origins
+    //     .iter()
+    //     .map(|o| o.parse::<HeaderValue>().unwrap())
+    //     .collect::<Vec<_>>(),
+    // )
+    //     .allow_methods([
+    //         Method::GET,
+    //         Method::POST,
+    //         Method::PUT,
+    //         Method::DELETE,
+    //         Method::OPTIONS,
+    //     ])
+    //     .allow_headers(tower_http::cors::Any);
+
+    let app = app_apis(app_state).layer(cors);
 
     let port = config.port;
 

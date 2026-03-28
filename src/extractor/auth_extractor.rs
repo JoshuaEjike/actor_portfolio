@@ -5,6 +5,7 @@ use axum_extra::{
     headers::{Authorization, authorization::Bearer},
 };
 
+use serde::Serialize;
 use uuid::Uuid;
 
 use crate::{
@@ -14,6 +15,7 @@ use crate::{
     state::AppState,
 };
 
+#[derive(Serialize, Debug)]
 pub struct AuthUser {
     pub id: Uuid,
     pub email: Email,

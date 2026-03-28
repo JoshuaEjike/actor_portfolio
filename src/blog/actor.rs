@@ -9,7 +9,6 @@ use crate::{
         messages::{BlogMessage, BlogResponse},
     },
     errors::api_errors::ApiErrors,
-    fields::text::Text,
 };
 
 pub struct BlogActor {
@@ -31,11 +30,12 @@ impl BlogActor {
         let created_at = chrono::Utc::now().naive_utc();
 
         sqlx::query!(
-            "INSERT INTO blog (id, title, description, content, image, image_id, created_by, created_by_name, created_by_email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+            "INSERT INTO blog (id, title, description, content, word_count, image, image_id, created_by, created_by_name, created_by_email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
             id,
-            blog.title.as_str(),
-            blog.description.as_str(),
+            blog.title,
+            blog.description,
             blog.content,
+            blog.word_count,
             blog.image,
             blog.image_id,
             blog.created_by,
@@ -53,7 +53,7 @@ impl BlogActor {
 
     pub async fn get_single_blog(&self, blog_id: Uuid) -> Result<BlogResponse, ApiErrors> {
         let blog = sqlx::query!(
-            "SELECT id, title, description, content, image, image_id, created_at, updated_at FROM blog WHERE id = $1",
+            "SELECT id, title, description, content, word_count, image, image_id, created_at, updated_at FROM blog WHERE id = $1",
             blog_id
         )
         .fetch_one(&self.pool)
@@ -62,9 +62,10 @@ impl BlogActor {
 
         Ok(BlogResponse {
             id: blog.id,
-            title: Text(blog.title),
-            description: Text(blog.description),
+            title: blog.title,
+            description: blog.description,
             content: blog.content,
+            word_count: blog.word_count,
             image: blog.image,
             image_id: blog.image_id,
             created_at: blog.created_at,
@@ -74,7 +75,7 @@ impl BlogActor {
 
     pub async fn get_all_blog(&self) -> Result<Vec<BlogResponse>, ApiErrors> {
         let blog = sqlx::query!(
-            "SELECT id, title, description, content, image, image_id, created_at, updated_at FROM blog ORDER BY created_at DESC"
+            "SELECT id, title, description, content, word_count, image, image_id, created_at, updated_at FROM blog ORDER BY created_at DESC"
         )
         .fetch_all(&self.pool)
         .await
@@ -84,9 +85,10 @@ impl BlogActor {
             .into_iter()
             .map(|blg| BlogResponse {
                 id: blg.id,
-                title: Text(blg.title),
-                description: Text(blg.description),
+                title: blg.title,
+                description: blg.description,
                 content: blg.content,
+                word_count: blg.word_count,
                 image: blg.image,
                 image_id: blg.image_id,
                 created_at: blg.created_at,
@@ -96,9 +98,10 @@ impl BlogActor {
     }
 
     pub async fn update_blog(&self, blog: UpdatedBlogData) -> Result<bool, ApiErrors> {
-        let result = sqlx::query!(r#"UPDATE blog SET description = COALESCE($1, description), content = COALESCE($2, content), image = COALESCE($3, image), image_id = COALESCE($4, image_id), edited_by = $5, edited_by_name = $6, edited_by_email = $7 WHERE id = $8"#, 
-                blog.description.as_ref().map(|s| s.as_str()),
+        let result = sqlx::query!(r#"UPDATE blog SET description = COALESCE($1, description), content = COALESCE($2, content), word_count = COALESCE($3, word_count), image = COALESCE($4, image), image_id = COALESCE($5, image_id), edited_by = $6, edited_by_name = $7, edited_by_email = $8 WHERE id = $9"#, 
+                blog.description,
                 blog.content,
+                blog.word_count,
                 blog.image,
                 blog.image_id,
                 blog.edited_by,
