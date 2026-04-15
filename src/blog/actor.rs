@@ -1,11 +1,11 @@
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, QueryBuilder};
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
 use crate::{
     blog::{
         dispatcher::blog_dispatcher,
-        dto::{CreateBlogData, UpdatedBlogData},
+        dto::{BlogQuery, CreateBlogData, UpdatedBlogData},
         messages::{BlogMessage, BlogResponse},
     },
     errors::api_errors::ApiErrors,
@@ -73,32 +73,109 @@ impl BlogActor {
         })
     }
 
-    pub async fn get_all_blog(&self) -> Result<Vec<BlogResponse>, ApiErrors> {
-        let blog = sqlx::query!(
-            "SELECT id, title, description, content, word_count, image, image_id, created_at, updated_at FROM blog ORDER BY created_at DESC"
-        )
-        .fetch_all(&self.pool)
-        .await
-        .map_err(|_| ApiErrors::InternalServerError("Failed to fetch project".to_string()))?;
+    // pub async fn get_all_blog(&self, query: BlogQuery) -> Result<Vec<BlogResponse>, ApiErrors> {
+    //     let page = query.page.unwrap_or(1);
+    //     let limit = query.limit.unwrap_or(10);
 
-        Ok(blog
-            .into_iter()
-            .map(|blg| BlogResponse {
-                id: blg.id,
-                title: blg.title,
-                description: blg.description,
-                content: blg.content,
-                word_count: blg.word_count,
-                image: blg.image,
-                image_id: blg.image_id,
-                created_at: blg.created_at,
-                updated_at: blg.updated_at,
-            })
-            .collect())
+    //     let offset = (page - 1) * limit;
+
+    //     let mut sql = String::from(
+    //         "SELECT id, title, description, content, word_count, image, image_id, created_at, updated_at FROM blog",
+    //     );
+
+    //     let mut conditions = vec![];
+    //     let mut args: Vec<String> = vec![];
+
+    //     if let Some(title) = query.title {
+    //         conditions.push(format!("title ILIKE ${}", args.len() + 1));
+    //         args.push(format!("%{}%", title));
+    //     }
+
+    //     if !conditions.is_empty() {
+    //         sql.push_str(" WHERE ");
+    //         sql.push_str(&conditions.join(" AND "));
+    //     }
+
+    //     sql.push_str(&format!(
+    //         " ORDER BY created_at DESC LIMIT {} OFFSET {}",
+    //         limit, offset
+    //     ));
+
+    //     let mut query_builder = sqlx::query_as::<_, BlogResponse>(&sql);
+
+    //     for arg in args {
+    //         query_builder = query_builder.bind(arg);
+    //     }
+
+    //     let blogs = query_builder
+    //         .fetch_all(&self.pool)
+    //         .await
+    //         .map_err(|_| ApiErrors::InternalServerError("Failed to fetch blog".to_string()))?;
+
+    //     Ok(blogs)
+    // }
+
+    pub async fn get_all_blog(
+        &self,
+        query: BlogQuery,
+    ) -> Result<(Vec<BlogResponse>, u64), ApiErrors> {
+        let page = query.page.unwrap_or(1);
+        let limit = query.limit.unwrap_or(10);
+        let offset = (page - 1) * limit;
+
+        // 🔹 MAIN QUERY
+        let mut qb = QueryBuilder::<Postgres>::new(
+            "SELECT id, title, description, content, word_count, image, image_id, created_at, updated_at FROM blog",
+        );
+
+        // 🔹 COUNT QUERY (for meta)
+        let mut count_qb = QueryBuilder::<Postgres>::new("SELECT COUNT(*) as count FROM blog");
+
+        // 🔍 FILTER
+        if let Some(title) = query.title {
+            qb.push(" WHERE title ILIKE ");
+            qb.push_bind(format!("%{}%", title));
+
+            count_qb.push(" WHERE title ILIKE ");
+            count_qb.push_bind(format!("%{}%", title));
+        }
+
+        // 🔹 ORDER + PAGINATION
+        qb.push(" ORDER BY created_at DESC");
+        qb.push(" LIMIT ");
+        qb.push_bind(limit as i64);
+        qb.push(" OFFSET ");
+        qb.push_bind(offset as i64);
+
+        // 🔹 FETCH DATA
+        let blogs = qb
+            .build_query_as::<BlogResponse>()
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|_| ApiErrors::InternalServerError("Failed to fetch blog".into()))?;
+
+        // 🔹 FETCH COUNT
+        let total: (i64,) = count_qb
+            .build_query_as()
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| ApiErrors::InternalServerError("Failed to count blog".into()))?;
+
+        Ok((blogs, total.0 as u64))
+    }
+
+    pub async fn get_total_blog_count(&self) -> Result<u64, ApiErrors> {
+        let total: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM blog")
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| ApiErrors::InternalServerError("Failed to count blog".into()))?;
+
+        Ok(total as u64)
     }
 
     pub async fn update_blog(&self, blog: UpdatedBlogData) -> Result<bool, ApiErrors> {
-        let result = sqlx::query!(r#"UPDATE blog SET description = COALESCE($1, description), content = COALESCE($2, content), word_count = COALESCE($3, word_count), image = COALESCE($4, image), image_id = COALESCE($5, image_id), edited_by = $6, edited_by_name = $7, edited_by_email = $8 WHERE id = $9"#, 
+        let result = sqlx::query!(r#"UPDATE blog SET title = COALESCE($1, title), description = COALESCE($2, description), content = COALESCE($3, content), word_count = COALESCE($4, word_count), image = COALESCE($5, image), image_id = COALESCE($6, image_id), edited_by = $7, edited_by_name = $8, edited_by_email = $9 WHERE id = $10"#, 
+                blog.title,
                 blog.description,
                 blog.content,
                 blog.word_count,

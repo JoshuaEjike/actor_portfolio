@@ -1,4 +1,7 @@
-use axum::{Json, extract::State};
+use axum::{
+    Json,
+    extract::{Query, State},
+};
 use tokio::sync::oneshot;
 use uuid::Uuid;
 
@@ -9,9 +12,8 @@ use crate::{
         path_id_extractor::PathParam,
         project_extractor::{ProjectCreateInput, ProjectUpateInput},
     },
-    fields::text::Text,
     project::{
-        dto::{CreateProjectData, UpdatedProjectData},
+        dto::{CreateProjectData, ProjectQuery, UpdatedProjectData},
         messages::ProjectMessage,
     },
     state::AppState,
@@ -26,12 +28,16 @@ pub async fn create_project(
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
-    let stack = Text::new(&payload.stack)?;
-
     let project = CreateProjectData {
         title: payload.title,
         description: payload.description,
-        stack,
+        company: payload.company,
+        role: payload.role,
+        start_date: payload.start_date,
+        end_date: payload.end_date,
+        tag: payload.tag,
+        link: payload.link,
+        stack: payload.stack,
         content: payload.content,
         word_count: payload.word_count,
         image: payload.image,
@@ -87,12 +93,16 @@ pub async fn get_single_project(
 
 pub async fn get_all_project(
     State(state): State<AppState>,
+    Query(query): Query<ProjectQuery>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
     state
         .project_tx
-        .send(ProjectMessage::GetAllProject { respond_to: tx })
+        .send(ProjectMessage::GetAllProject {
+            query,
+            respond_to: tx,
+        })
         .await
         .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
 
@@ -103,6 +113,28 @@ pub async fn get_all_project(
     Ok(Json(serde_json::json!({
         "message": "success".to_string(),
         "data": projects
+    })))
+}
+
+
+pub async fn get_total_project_count(
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, ApiErrors> {
+    let (tx, rx) = oneshot::channel();
+
+    state
+        .project_tx
+        .send(ProjectMessage::GetTotalProjectCount { respond_to: tx })
+        .await
+        .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
+
+    let project = rx
+        .await
+        .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
+
+    Ok(Json(serde_json::json!( {
+        "message": "success".to_string(),
+        "data": {"total": project},
     })))
 }
 
@@ -141,6 +173,12 @@ pub async fn update_project(
     let project = UpdatedProjectData {
         project_id,
         description: payload.description,
+        company: payload.company,
+        role: payload.role,
+        start_date: payload.start_date,
+        end_date: payload.end_date,
+        tag: payload.tag,
+        link: payload.link,
         stack: payload.stack,
         content: payload.content,
         word_count: payload.word_count,

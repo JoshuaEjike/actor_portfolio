@@ -1,13 +1,14 @@
 use chrono::NaiveDateTime;
+use sqlx::prelude::FromRow;
 use tokio::sync::oneshot;
 use uuid::Uuid;
 
 use crate::{
-    blog::dto::{CreateBlogData, UpdatedBlogData},
+    blog::dto::{BlogQuery, CreateBlogData, UpdatedBlogData},
     errors::api_errors::ApiErrors,
 };
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize, FromRow)]
 pub struct BlogResponse {
     pub id: Uuid,
     pub title: String,
@@ -31,8 +32,13 @@ pub enum BlogMessage {
         respond_to: oneshot::Sender<Result<BlogResponse, ApiErrors>>,
     },
 
+    GetTotalBlogCount {
+        respond_to: oneshot::Sender<Result<u64, ApiErrors>>,
+    },
+
     GetAllBlog {
-        respond_to: oneshot::Sender<Result<Vec<BlogResponse>, ApiErrors>>,
+        query: BlogQuery,
+        respond_to: oneshot::Sender<Result<(Vec<BlogResponse>, u64), ApiErrors>>,
     },
 
     UpdateBlog {

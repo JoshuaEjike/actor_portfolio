@@ -3,10 +3,11 @@ use axum::{
     extract::{FromRequest, Request},
 };
 
+use chrono::NaiveDate;
+
 use crate::{
     core::{image_core::base64_image_uploader_core, stack_identifier_core::ensure_stack_exists},
     errors::api_errors::ApiErrors,
-    fields::text::Text,
     payload_handler::project_payload_handler::ProjectCreateRequest,
     project::dto::UpdateProjectRequest,
     state::AppState,
@@ -15,6 +16,12 @@ use crate::{
 pub struct ProjectCreateInput {
     pub title: String,
     pub description: String,
+    pub company: String,
+    pub role: String,
+    pub start_date: NaiveDate,
+    pub end_date: Option<NaiveDate>,
+    pub tag: String,
+    pub link: String,
     pub stack: String,
     pub content: String,
     pub word_count: i32,
@@ -39,6 +46,12 @@ impl FromRequest<AppState> for ProjectCreateInput {
         Ok(ProjectCreateInput {
             title: payload_data.title,
             description: payload_data.description,
+            company: payload_data.company,
+            role: payload_data.role,
+            start_date: payload_data.start_date,
+            end_date: payload_data.end_date,
+            tag: payload_data.tag,
+            link: payload_data.link,
             stack: payload_data.stack,
             content: payload_data.content,
             word_count: payload_data.word_count,
@@ -48,9 +61,16 @@ impl FromRequest<AppState> for ProjectCreateInput {
     }
 }
 
+#[derive(Clone)]
 pub struct ProjectUpateInput {
     pub description: Option<String>,
-    pub stack: Option<Text>,
+    pub company: Option<String>,
+    pub role: Option<String>,
+    pub start_date: Option<NaiveDate>,
+    pub end_date: Option<NaiveDate>,
+    pub tag: Option<String>,
+    pub link: Option<String>,
+    pub stack: Option<String>,
     pub content: Option<String>,
     pub word_count: Option<i32>,
     pub image: Option<String>,
@@ -65,9 +85,7 @@ impl FromRequest<AppState> for ProjectUpateInput {
             .await
             .map_err(|_| ApiErrors::BadRequest("Invalid request body".into()))?;
 
-        let stack = payload.stack.as_deref().map(Text::new).transpose()?;
-
-        if let Some(title) = payload.stack {
+        if let Some(title) = payload.stack.clone() {
             ensure_stack_exists(title, &state.stack_tx).await?;
         }
 
@@ -84,7 +102,13 @@ impl FromRequest<AppState> for ProjectUpateInput {
 
         Ok(ProjectUpateInput {
             description: payload.description,
-            stack,
+            company: payload.company,
+            role: payload.role,
+            start_date: payload.start_date,
+            end_date: payload.end_date,
+            tag: payload.tag,
+            link: payload.link,
+            stack: payload.stack,
             content: payload.content,
             word_count: payload.word_count,
             image,

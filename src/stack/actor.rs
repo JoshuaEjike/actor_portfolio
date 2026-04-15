@@ -108,7 +108,8 @@ impl StackActor {
     }
 
     pub async fn update_stack(&self, stack: UpdatedStackData) -> Result<bool, ApiErrors> {
-        let result = sqlx::query!(r#"UPDATE stack SET slug = $1, edited_by = $2, edited_by_name = $3, edited_by_email = $4 WHERE id = $5"#, 
+        let result = sqlx::query!(r#"UPDATE stack SET title = COALESCE($1, title), slug = COALESCE($2, slug), edited_by = $3, edited_by_name = $4, edited_by_email = $5 WHERE id = $6"#,
+                stack.title.as_ref().map(|s| s.as_str()),
                 stack.slug.as_ref().map(|s| s.as_str()),
                 stack.edited_by,
                 stack.edited_by_name.as_str(),

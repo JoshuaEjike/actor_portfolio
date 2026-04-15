@@ -18,6 +18,7 @@ pub struct ValidatedCreateStackData {
 
 pub struct UpdatedStackData {
     pub stack_id: Uuid,
+    pub title: Option<Text>,
     pub slug: Option<Text>,
     pub edited_by: Uuid,
     pub edited_by_name: Text,
@@ -26,5 +27,6 @@ pub struct UpdatedStackData {
 
 #[derive(Deserialize)]
 pub struct UpdateStackRequest {
+    pub title: Option<String>,
     pub slug: Option<String>,
 }

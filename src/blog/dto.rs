@@ -18,6 +18,7 @@ pub struct CreateBlogData {
 #[derive(Debug)]
 pub struct UpdatedBlogData {
     pub blog_id: Uuid,
+    pub title: Option<String>,
     pub description: Option<String>,
     pub content: Option<String>,
     pub word_count: Option<i32>,
@@ -38,8 +39,16 @@ pub struct ValidatedCreateBlogData {
 
 #[derive(Deserialize)]
 pub struct UpdateBlogRequest {
+    pub title: Option<String>,
     pub description: Option<String>,
     pub content: Option<String>,
     pub word_count: Option<i32>,
     pub image: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct BlogQuery {
+    pub title: Option<String>,
+    pub page: Option<u32>,
+    pub limit: Option<u32>,
 }

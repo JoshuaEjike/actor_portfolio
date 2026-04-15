@@ -15,8 +15,12 @@ pub async fn blog_dispatcher(actor: &BlogActor, mut rx: mpsc::Receiver<BlogMessa
                 let _ = respond_to.send(actor.get_single_blog(blog_id).await);
             }
 
-            BlogMessage::GetAllBlog { respond_to } => {
-                let _ = respond_to.send(actor.get_all_blog().await);
+            BlogMessage::GetTotalBlogCount { respond_to } => {
+                let _ = respond_to.send(actor.get_total_blog_count().await);
+            }
+
+            BlogMessage::GetAllBlog { query, respond_to } => {
+                let _ = respond_to.send(actor.get_all_blog(query).await);
             }
 
             BlogMessage::UpdateBlog { blog, respond_to } => {

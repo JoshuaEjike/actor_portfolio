@@ -25,5 +25,6 @@ async-trait = "0.1.88"
 base64 = "0.22.1"
 sha1 = "0.10.6"
 tower-cookies = "0.11.0"
+url = "2.5.8"
 tower = { version = "0.5.1", features = ["full"] }
 tower-http = { version = "0.6.8", features = ["full"] }

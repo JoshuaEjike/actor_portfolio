@@ -52,7 +52,7 @@ pub async fn create_stack(
 
     Ok(Json(serde_json::json!({
         "message": "success".to_string(),
-        "data": { "id": stack_id }
+        "data": stack_id
     })))
 }
 
@@ -138,10 +138,13 @@ pub async fn update_stack(
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
+    let title = payload.title.as_deref().map(Text::new).transpose()?;
+
     let slug = payload.slug.as_deref().map(Text::new).transpose()?;
 
     let stack = UpdatedStackData {
         stack_id,
+        title,
         slug,
         edited_by: id,
         edited_by_name: name,

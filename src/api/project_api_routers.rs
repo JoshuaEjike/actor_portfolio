@@ -5,7 +5,7 @@ use axum::{
 
 use crate::{
     project::handlers::{
-        create_project, delete_project, get_all_project, get_single_project, update_project,
+        create_project, delete_project, get_all_project, get_total_project_count, get_single_project, update_project,
     },
     state::AppState,
 };
@@ -14,6 +14,7 @@ pub fn project_api_router(state: AppState) -> Router {
     Router::new()
         .route("/create", post(create_project))
         .route("/all", get(get_all_project))
+        .route("/total", get(get_total_project_count))
         .route(
             "/detail/{id}",
             get(get_single_project)

@@ -1,10 +1,13 @@
-use axum::{Json, extract::State};
+use axum::{
+    Json,
+    extract::{Query, State},
+};
 use tokio::sync::oneshot;
 use uuid::Uuid;
 
 use crate::{
     blog::{
-        dto::{CreateBlogData, UpdatedBlogData},
+        dto::{BlogQuery, CreateBlogData, UpdatedBlogData},
         messages::BlogMessage,
     },
     errors::api_errors::ApiErrors,
@@ -83,12 +86,16 @@ pub async fn get_single_blog(
 
 pub async fn get_all_blog(
     State(state): State<AppState>,
+    Query(query): Query<BlogQuery>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {
     let (tx, rx) = oneshot::channel();
 
     state
         .blog_tx
-        .send(BlogMessage::GetAllBlog { respond_to: tx })
+        .send(BlogMessage::GetAllBlog {
+            query,
+            respond_to: tx,
+        })
         .await
         .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
 
@@ -98,7 +105,28 @@ pub async fn get_all_blog(
 
     Ok(Json(serde_json::json!( {
         "message": "success".to_string(),
-        "data": blogs,
+        "data": {"blogs": blogs.0, "total": blogs.1},
+    })))
+}
+
+pub async fn get_total_blog_count(
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, ApiErrors> {
+    let (tx, rx) = oneshot::channel();
+
+    state
+        .blog_tx
+        .send(BlogMessage::GetTotalBlogCount { respond_to: tx })
+        .await
+        .map_err(|_| ApiErrors::InternalServerError("Service unavailable".to_string()))?;
+
+    let blogs = rx
+        .await
+        .map_err(|_| ApiErrors::InternalServerError("Failed".to_string()))??;
+
+    Ok(Json(serde_json::json!( {
+        "message": "success".to_string(),
+        "data": {"total": blogs},
     })))
 }
 
@@ -137,6 +165,7 @@ pub async fn update_blog(
 
     let blog = UpdatedBlogData {
         blog_id,
+        title: payload.title,
         description: payload.description,
         content: payload.content,
         word_count: payload.word_count,

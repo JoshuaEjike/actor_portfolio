@@ -43,6 +43,7 @@ impl FromRequest<AppState> for BlogCreateInput {
 }
 
 pub struct BlogUpateInput {
+    pub title: Option<String>,
     pub description: Option<String>,
     pub content: Option<String>,
     pub word_count: Option<i32>,
@@ -70,6 +71,7 @@ impl FromRequest<AppState> for BlogUpateInput {
         };
 
         Ok(BlogUpateInput {
+            title: payload.title,
             description: payload.description,
             content: payload.content,
             word_count: payload.word_count,

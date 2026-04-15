@@ -123,7 +123,7 @@ pub async fn login(
 
     Ok(Json(serde_json::json!({
         "message": "success".to_string(),
-        "data": { "token": tokens.access_token },
+        "token": tokens.access_token,
     })))
 }
 
