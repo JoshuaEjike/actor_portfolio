@@ -116,7 +116,6 @@ pub async fn get_all_project(
     })))
 }
 
-
 pub async fn get_total_project_count(
     State(state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, ApiErrors> {

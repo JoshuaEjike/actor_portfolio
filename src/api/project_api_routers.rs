@@ -5,7 +5,8 @@ use axum::{
 
 use crate::{
     project::handlers::{
-        create_project, delete_project, get_all_project, get_total_project_count, get_single_project, update_project,
+        create_project, delete_project, get_all_project, get_single_project,
+        get_total_project_count, update_project,
     },
     state::AppState,
 };
