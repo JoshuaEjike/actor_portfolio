@@ -70,12 +70,12 @@ impl ProjectCreateRequest {
             ApiErrors::BadRequest("Invalid link format. Must be a valid URL".to_string())
         })?;
 
-        if let Some(end_date) = self.end_date {
-            if end_date < start_date {
-                return Err(ApiErrors::BadRequest(
-                    "End date cannot be before start date".to_string(),
-                ));
-            }
+        if let Some(end_date) = self.end_date
+            && end_date < start_date
+        {
+            return Err(ApiErrors::BadRequest(
+                "End date cannot be before start date".to_string(),
+            ));
         }
 
         Ok(ValidatedCreateProjectData {
